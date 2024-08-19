@@ -6,5 +6,5 @@ set -a
 source .env
 set +a
 echo $TRAFFIC_GENERATOR_HOSTNAME
-./tx-traffic-poc
+./evm-tx-load-gen
 
