@@ -1,9 +1,9 @@
-module github.com/bxue-l2/tx-traffic-poc
+module github.com/Layr-Labs/evm-tx-load-gen
 
 go 1.21.0
 
 require (
-	github.com/Layr-Labs/eigenda v0.7.5
+	github.com/Layr-Labs/eigenda v0.7.4
 	github.com/ethereum/go-ethereum v1.14.7
 	github.com/urfave/cli v1.22.15
 )
