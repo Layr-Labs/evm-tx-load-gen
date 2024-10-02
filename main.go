@@ -70,8 +70,8 @@ func trafficGeneratorMain(ctx *cli.Context) error {
 	}
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
-	<-signals
 
+	<-signals
 	cancel()
 	wg.Wait()
 	return nil
@@ -119,25 +119,27 @@ func (g *TrafficGenerator) StartTraffic(ctx context.Context, fromIndex int) erro
 			return nil
 		case <-ticker.C:
 			toIndex := (fromIndex + 1) % int(g.Config.NumInstances)
-			tx, err := g.CraftTx(context.Background(), g.KeyPairs[fromIndex], g.KeyPairs[toIndex])
+			tx, err := g.CraftTx(ctx, g.KeyPairs[fromIndex], g.KeyPairs[toIndex])
 			if err != nil {
 				fmt.Println("failed to craft a tx", "err:", err)
+				continue
 			}
 
 			err = g.SendRequest(ctx, tx)
 			if err != nil {
 				fmt.Println("failed to send blob request", "err:", err)
+				continue
 			}
 
-			g.GetBalance(g.KeyPairs[fromIndex].Address)
+			g.GetBalance(ctx, g.KeyPairs[fromIndex].Address)
 		}
 	}
 
 	return nil
 }
 
-func (g *TrafficGenerator) GetBalance(address common.Address) {
-	balance, err := g.client.BalanceAt(context.Background(), address, nil)
+func (g *TrafficGenerator) GetBalance(ctx context.Context, address common.Address) {
+	balance, err := g.client.BalanceAt(ctx, address, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -146,19 +148,19 @@ func (g *TrafficGenerator) GetBalance(address common.Address) {
 }
 
 func (g *TrafficGenerator) SendRequest(ctx context.Context, tx *types.Transaction) error {
-	return g.client.SendTransaction(context.Background(), tx)
+	return g.client.SendTransaction(ctx, tx)
 
 }
 
 func (g *TrafficGenerator) CraftTx(ctx context.Context, from, to KeyPair) (*types.Transaction, error) {
 	fromAddress := crypto.PubkeyToAddress(*from.public)
-	nonce, err := g.client.PendingNonceAt(context.Background(), fromAddress)
+	nonce, err := g.client.PendingNonceAt(ctx, fromAddress)
 	if err != nil {
 		return nil, err
 	}
 
 	value := big.NewInt(1000)           // in wei (1 eth)
-	gasLimit := uint64(3000000)        // in units
+	gasLimit := uint64(3000000)         // in units
 	gasPrice := big.NewInt(30000000000) // in wei (30 gwei)
 	toAddress := to.Address
 
@@ -170,7 +172,7 @@ func (g *TrafficGenerator) CraftTx(ctx context.Context, from, to KeyPair) (*type
 
 	tx := types.NewTransaction(nonce, toAddress, value, gasLimit, gasPrice, data)
 
-	chainID, err := g.client.NetworkID(context.Background())
+	chainID, err := g.client.NetworkID(ctx)
 	if err != nil {
 		return nil, err
 	}
