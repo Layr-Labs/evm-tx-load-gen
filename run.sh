@@ -1,10 +1,12 @@
 #!/bin/bash
 
-go build
+set -o errexit
+
+go build -o bin/evm-tx-load-gen
 
 set -a
 source .env
 set +a
 echo $TRAFFIC_GENERATOR_HOSTNAME
-./evm-tx-load-gen
+./bin/evm-tx-load-gen
 
